@@ -21,7 +21,7 @@ echo "Removing existing files (again?)"
 rm -rf public/*
 
 echo "Generating site"
-./build.sh
+./build.sh -O
 
 echo "Updating gh-pages branch"
 cd public && git add . && git commit -m"Publishing to gh-pages (publish-gh-pages.sh)" && cd .. && git push --force origin gh-pages

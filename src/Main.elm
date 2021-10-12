@@ -1,9 +1,9 @@
 module Main exposing (Model, Msg(..), update, view)
 
 import Browser
-import Html exposing (Html, div, text)
-import Html.Attributes as Attributes
 import Bulma.Classes as Bulma
+import Html exposing (Html, div, li, text, ul)
+import Html.Attributes as Attributes exposing (class)
 
 
 main : Program () Model Msg
@@ -16,7 +16,20 @@ main =
 
 
 type alias Model =
-    Int
+    { title : String, data : Tree }
+
+
+type Tree
+    = Tree (List TreeNode)
+
+
+type TreeNode
+    = SingleNode Node
+    | XorGroup (List Node)
+
+
+type Node
+    = Node String Tree
 
 
 
@@ -25,7 +38,20 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( 0
+    ( { title = "Warnier diagrams"
+      , data =
+            Tree
+                [ SingleNode <| Node "Toggle conditional" (Tree [ SingleNode <| Node "Is conditional?" (Tree []) ])
+                , SingleNode <| Node "Other thing"
+                    (Tree
+                        [ XorGroup
+                            [ Node "Do other thing" (Tree [])
+                            , Node "Do one more thing" (Tree [])
+                            ]
+                        ]
+                    )
+                ]
+      }
     , Cmd.none
     )
 
@@ -40,7 +66,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( 0, Cmd.none )
+    init ()
 
 
 
@@ -65,5 +91,30 @@ view model =
             [ text "Controls..." ]
         , div
             [ Attributes.class Bulma.column ]
-            [ text "Diagram" ]
+            [ showTree model.data ]
         ]
+
+
+showTree : Tree -> Html Msg
+showTree (Tree groups) =
+    case groups of
+        [] ->
+            div [] []
+
+        _ ->
+            div [ class "tree inline-block" ] (List.concat <| List.map showGroup groups)
+
+
+showGroup : TreeNode -> List (Html Msg)
+showGroup node =
+    case node of
+
+        XorGroup nodes ->
+            [ div [ class "xor-group" ] (List.map showNode nodes) ]
+
+        SingleNode n ->
+            [ showNode n ]
+
+showNode : Node -> Html Msg
+showNode (Node s t) =
+    ul [] [ li [] [ text s, showTree t ] ]
